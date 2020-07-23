@@ -395,10 +395,13 @@ output_result()
         echo "${get_result}"
     else
         local os
+        local previous_clipboard
         os=$(uname)
         if [ "$os" == "Darwin" ]; then
+            previous_clipboard=$(pbpaste)
             echo -n "${get_result}" | pbcopy
         elif [ "$os" == "Linux" ] || [ "$os" == "FreeBSD" ]; then
+            previous_clipboard=$(xclip -selection clipboard -out)
             echo -n "${get_result}" | xclip -selection clipboard
         fi
         # sleep and reset clipboard
@@ -410,9 +413,9 @@ output_result()
             local os
             os=$(uname)
             if [ "$os" == "Darwin" ]; then
-                echo -n "CLEAR" | pbcopy
+                echo "$previous_clipboard" | pbcopy
             elif [ "$os" == "Linux" ] || [ "$os" == "FreeBSD" ]; then
-                echo -n "" | xclip -selection clipboard
+                echo "$previous_clipboard" | xclip -selection clipboard -in
             fi
         ) 2>/dev/null & disown
     fi
