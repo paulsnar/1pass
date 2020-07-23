@@ -107,6 +107,7 @@ if [ ! -r "${secret}" ]; then
     exit 1
 fi
 
+os=$(uname)
 index=${cache_dir}/_index.gpg
 session=${cache_dir}/_session.gpg
 token=""
@@ -389,34 +390,56 @@ get_uuid()
     output_result
 }
 
+read_clipboard()
+{
+  if [ "$os" == "Darwin" ]; then
+      pbpaste
+  elif [ "$os" == "Linux" -o "$os" == "FreeBSD" ]; then
+      xclip -selection clipboard -out
+  fi
+}
+
+write_clipboard()
+{
+    local contents="$1"
+    if [ "$os" == "Darwin" ]; then
+        echo -n "$1" | pbcopy
+    elif [ "$os" == "Linux" -o "$os" == "FreeBSD" ]; then
+        echo -n "$1" | xclip -selection clipboard -in
+    fi
+}
+
+restore_clipboard()
+{
+    local contents="$1"
+    local guard="$2"
+    local current_clipboard=$(read_clipboard; echo .)
+    current_clipboard="${current_clipboard%.}"
+    if [ "$current_clipboard" == "$guard" ]; then
+        write_clipboard "$contents"
+    fi
+}
+
 output_result()
 {
     if [ $print_output -eq 1 ]; then
         echo "${get_result}"
     else
-        local os
         local previous_clipboard
-        os=$(uname)
-        if [ "$os" == "Darwin" ]; then
-            previous_clipboard=$(pbpaste)
-            echo -n "${get_result}" | pbcopy
-        elif [ "$os" == "Linux" ] || [ "$os" == "FreeBSD" ]; then
-            previous_clipboard=$(xclip -selection clipboard -out)
-            echo -n "${get_result}" | xclip -selection clipboard
-        fi
+        local current_clipboard
+
+        previous_clipboard=$(read_clipboard; echo .)
+        previous_clipboard="${previous_clipboard%.}"
+
+        current_clipboard="${get_result}"
+        write_clipboard "$current_clipboard"
         # sleep and reset clipboard
         local sleep_argv0
         sleep_argv0="1pass sleep for user $(id -u)"
         pkill -f "^$sleep_argv0" 2>/dev/null && sleep 0.5
         (
             ( exec -a "$sleep_argv0" sleep "$clip_time" )
-            local os
-            os=$(uname)
-            if [ "$os" == "Darwin" ]; then
-                echo "$previous_clipboard" | pbcopy
-            elif [ "$os" == "Linux" ] || [ "$os" == "FreeBSD" ]; then
-                echo "$previous_clipboard" | xclip -selection clipboard -in
-            fi
+            restore_clipboard "$previous_clipboard" "$current_clipboard"
         ) 2>/dev/null & disown
     fi
 }
