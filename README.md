@@ -90,7 +90,7 @@ should inspect the source code to ensure that you trust the software, as well as
 documentation to understand the security tradeoffs.
 
 Like the 1Password application itself, **1pass** relies on *one password*. However that password is
-**not** your 1Password "master password" -- it is your Gnu Privacy Guard ([gpg](https://gnupg.org/))
+**not** your 1Password "master password" – it is your Gnu Privacy Guard ([gpg](https://gnupg.org/))
 private key. GPG, when configured to use the GPG-agent, will cache your private key password for a
 configurable length of time (a few hours to a day is perhaps reasonable). **1pass** uses your GPG
 key to store an encrypted copies of your 1Password master password and your 1Password account secret
@@ -101,7 +101,7 @@ temporarily decrypted and exchanged for a session token, which is also then encr
 The session token will be refreshed as needed. These actions happen automatically once your GPG key
 is available in the GPG-agent.
 
-The data that is fetched from the 1Password service is cached in local files -- once again also
+The data that is fetched from the 1Password service is cached in local files – once again also
 encrypted using your GPG private key.
 
 You can "lock" your **1pass** session by running the "forget" command:
@@ -184,7 +184,7 @@ $ 1pass Github
 ```
 
 The contents of the clipboard will be automatically cleared after 30 seconds. You can also pass
-**1pass** an optional field argument -- for example "username" to retrieve that field from the item:
+**1pass** an optional field argument – for example "username" to retrieve that field from the item:
 
 ```sh
 $ 1pass -p MyBankAccount username
@@ -199,10 +199,10 @@ $ 1pass -p MyBankAccount pin
 1234
 ```
 
-**1pass** has special support for TOTP fields -- these are fetched directly via `op`
-rather than a local cache. (Thanks to (@ev0rtex)[https://github.com/ev0rtex]).
+**1pass** has special support for TOTP fields – these are fetched directly via `op`
+rather than a local cache. (Thanks to [@ev0rtex](https://github.com/ev0rtex]).
 Note that this **is different** from using TOTP 2FA to log into your 1Password
-account (that is supported too -- see below)
+account (that is supported too – see below)
 
 ```sh
 $ 1pass -p MyBankAccount totp
@@ -226,7 +226,7 @@ For the brave, a trivial Emacs wrapper library is included. E.g.
 ## Caching and Sessions
 
 When using **1pass**, all response data from 1Password is encrypted and then cached to
-```~/.1pass/cache```. Sometimes this cache will be out of date -- for example if you have created a
+```~/.1pass/cache```. Sometimes this cache will be out of date – for example if you have created a
 new password entry via the 1Password application. Passing ```-r``` to **1pass** will force a refresh
 from the online 1Password vault.
 
