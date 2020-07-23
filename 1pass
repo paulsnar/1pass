@@ -407,7 +407,13 @@ output_result()
         pkill -f "^$sleep_argv0" 2>/dev/null && sleep 0.5
         (
             ( exec -a "$sleep_argv0" sleep "$clip_time" )
-            echo -n "CLEAR" | pbcopy
+            local os
+            os=$(uname)
+            if [ "$os" == "Darwin" ]; then
+                echo -n "CLEAR" | pbcopy
+            elif [ "$os" == "Linux" ] || [ "$os" == "FreeBSD" ]; then
+                echo -n "" | xclip -selection clipboard
+            fi
         ) 2>/dev/null & disown
     fi
 }
