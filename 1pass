@@ -378,6 +378,17 @@ get_totp()
     fi
 }
 
+get_uuid()
+{
+    if [ ! -r "$index" ] || [ $refresh -eq 1 ]; then
+        fetch_index
+    fi
+    local uuid
+    uuid = $(gpg -qd "$index" | jq -r ".[] | select(.overview.title==\"${1}\").uuid")
+    get_result="${uuid}"
+    output_result
+}
+
 output_result()
 {
     if [ $print_output -eq 1 ]; then
@@ -474,6 +485,7 @@ elif [ $# -eq 1 ]; then
 elif [ $# -eq 2 ]; then
     case "$2" in
         totp ) get_totp "$1"          ;;
+        uuid ) get_uuid "$1"          ;;
         *    ) get_by_title "$1" "$2" ;;
     esac
 fi
