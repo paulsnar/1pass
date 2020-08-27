@@ -392,11 +392,11 @@ get_uuid()
 
 read_clipboard()
 {
-  if [ "$os" == "Darwin" ]; then
-      pbpaste
-  elif [ "$os" == "Linux" -o "$os" == "FreeBSD" ]; then
-      xclip -selection clipboard -out
-  fi
+    if [ "$os" == "Darwin" ]; then
+        pbpaste
+    elif [ "$os" == "Linux" -o "$os" == "FreeBSD" ]; then
+        xclip -selection clipboard -out
+    fi
 }
 
 write_clipboard()
