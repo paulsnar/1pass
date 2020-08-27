@@ -243,6 +243,47 @@ fetch_index()
     echo -n "${items}" | gpg -qe --batch -r "$self_key" > "$index"
 }
 
+echo_stderr()
+{
+    echo "$@" > /dev/stderr
+}
+
+select_index_item()
+{
+    local title="$1"
+    local selector="$2"
+    ensure_index
+    local items=$(gpg -qd "$index" | jq -c ".[] | select(.overview.title==\"$1\")")
+    local itemcount=$(echo "$items" | jq -sr length)
+    if [ "$itemcount" -gt 1 ]; then
+        echo_stderr "Multiple items titled \"$title\" found:"
+        local i=1
+        echo "$items" | while read -r item; do
+            local username=$(echo "$item" | jq -r '.overview.ainfo')
+            echo_stderr "($i) $title ($username)"
+            i=$((i + 1))
+        done
+        local selection
+        printf "> " > /dev/stderr
+        read -r selection
+        if [ "$selection" -lt 1 -o "$selection" -gt "$itemcount" ]; then
+            echo_stderr "Invalid selection."
+            exit 1
+        fi
+        selection=$((selection - 1))
+        echo "$items" | jq -sr ".[$selection]$selector"
+    elif [ "$selector" ]; then
+        echo "$items" | jq -r "$selector"
+    else
+        echo "$items"
+    fi
+}
+
+select_uuid()
+{
+    select_index_item "$1" ".uuid"
+}
+
 #
 # fetch an item from the net by uuid and cache it locally
 #
@@ -360,8 +401,7 @@ get_totp()
     if [ ! -r "$index" ] || [ $refresh -eq 1 ]; then
         fetch_index
     fi
-    local uuid
-    uuid=$(gpg -qd "$index" | jq -r ".[] | select(.overview.title==\"${1}\").uuid")
+    local uuid=$(select_uuid "$1")
 
     # Fetch the TOTP
     if [ $verbose -eq 1 ]; then
@@ -384,8 +424,7 @@ get_uuid()
     if [ ! -r "$index" ] || [ $refresh -eq 1 ]; then
         fetch_index
     fi
-    local uuid
-    uuid = $(gpg -qd "$index" | jq -r ".[] | select(.overview.title==\"${1}\").uuid")
+    local uuid=$(select_uuid "$1")
     get_result="${uuid}"
     output_result
 }
@@ -462,9 +501,8 @@ _get_by()
     if [ ! -r "$index" ] || [ $refresh -eq 1 ]; then
         fetch_index
     fi
-    # read both uuid and templateUuid. Complicated call is so that we only call GPG once
-    q=".[] | select(.overview.title==\"${title}\").uuid + \":\" + select(.overview.title==\"${title}\").templateUuid"
-    IFS=':' read -r uuid tid <<< "$(gpg -qd "$index" | jq -r "${q}")"
+    item=$(select_index_item "$title" "(.uuid + \":\" + .templateUuid)")
+    IFS=':' read -r uuid tid <<< "$item"
     if [ "$tid" != "" ]; then
         "${func}${tid}" "$uuid" "$field"
         if [ $? ]; then
