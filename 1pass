@@ -271,6 +271,9 @@ select_index_item()
             exit 1
         fi
         selection=$((selection - 1))
+        if [ "$selector" ]; then
+            selector=" | $selector"
+        fi
         echo "$items" | jq -sr ".[$selection]$selector"
     elif [ "$selector" ]; then
         echo "$items" | jq -r "$selector"
